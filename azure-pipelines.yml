@@ -5,8 +5,8 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 variables:
-  resourcegroup: 'mcw-mlops-jss'
-  workspace: 'quick-start-ws'
+  resourcegroup: 'MCW-MLOps-XXXXX'
+  workspace: 'quick-starts-ws-XXXXX'
   experiment: 'quick-starts-mlops'
   aml_compute_target: 'amlcluster'
   model_name: 'compliance-classifier'
