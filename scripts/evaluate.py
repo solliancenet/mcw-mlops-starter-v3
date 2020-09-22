@@ -92,14 +92,40 @@ if deploy_model:
     glove_ds = Dataset.get_by_name(workspace=ws, name=glove_ds_name)
     
     model_description = 'Deep learning model to classify the descriptions of car components as compliant or non-compliant.'
+    
+    # Create model datasheet
+    from datetime import datetime
+    from pytz import timezone
+    etz = 'US/Eastern'
+    time_stamp = datetime.now(timezone(etz))
+    time_stamp_str = time_stamp.strftime('%A %m/%d/%Y %I:%M:%S%p')
+    model_tags = {}
+    model_tags['title'] = 'Connected car components classifier'
+    model_tags['datasheet_description'] = 'Data sheet last updated: ' + time_stamp_str
+    model_tags['details'] = 'This model was developed for automatically classifying car components as compliant or not compliant. The model leverages deep learning technologies with Natural Language Processing techniques to scan through vehicle specification documents to find compliance issues with new regulations.'
+    model_tags['date'] = time_stamp_str
+    model_tags['type'] = 'Classification'
+    model_tags['build_number'] = args.build_number
+    model_tags['run_id'] = latest_model_run_id
+    model_tags['help'] = 'MCW MLOps'
+    model_tags['help_url'] = 'https://github.com/microsoft/MCW-ML-Ops'
+    model_tags['usecase_primary'] = 'Car component classification as compliant or not compliant.'
+    model_tags['usecase_secondary'] = 'None'
+    model_tags['usecase_outofscope'] = 'This is a POC and thus not ready for prime time.'
+    model_tags['dataset_description'] = 'The component descriptions, which are free form text, are entered and managed via a web application. This web application takes new component descriptions entered by authorized technicians and labels the component as compliant or non-compliant based on the text. For model training, the data has been exported all of their labeled component descriptions as flat files (CSV format).'
+    model_tags['motivation'] = 'The customer would like to define a process for operationalizing deep learning that encompasses all phases of the application life cycle along with model creation and deployment of a deep learning model. For this first proof of concept, the customer would like to focus on component compliance. Specifically, they are looking to leverage Deep Learning technologies with Natural Language Processing techniques to scan through vehicle specification documents to find compliance issues with new regulations.'
+    model_tags['caveats'] = 'Since this is a POC the labeled training data used to train the model is limited.'
+    
     model = Model.register(
         model_path='model.onnx',  # this points to a local file
         model_name=args.model_name,  # this is the name the model is registered as
-        tags={"type": "classification", "run_id": latest_model_run_id, "build_number": args.build_number},
+        tags=model_tags,
         description=model_description,
         workspace=run.experiment.workspace,
         datasets=[('training data', cardata_ds), ('embedding data', glove_ds)])
     
+    model.update_tags_properties(add_tags={'version': model.version})
+
     print("Model registered: {} \nModel Description: {} \nModel Version: {}".format(model.name, 
                                                                                 model.description, model.version))
     eval_info["model_name"] = model.name
