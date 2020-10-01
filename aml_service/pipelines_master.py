@@ -8,7 +8,7 @@ from azureml.core.runconfig import RunConfiguration
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.runconfig import DEFAULT_CPU_IMAGE
 from azureml.data.data_reference import DataReference
-from azureml.pipeline.core import Pipeline, PipelineData
+from azureml.pipeline.core import Pipeline, PipelineData, PipelineRun, StepRun
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.core.authentication import AzureCliAuthentication
 
@@ -125,9 +125,18 @@ print("Pipeline is submitted for execution")
 
 pipeline_run.wait_for_completion(show_output=True, timeout_seconds=43200)
 
+print("Get StepRun for evaluate step...")
+pipeline_run_id = pipeline_run.id
+step_run_id = pipeline_run.find_step_run('evaluate')[0].id
+node_id = pipeline_run.get_graph().node_name_dict['evaluate'][0].node_id
+print('Pipeline Run ID: {} Step Run ID: {}, Step Run Node ID: {}'.format(pipeline_run_id, step_run_id, node_id))
+step_run = StepRun(run.experiment, step_run_id, pipeline_run_id, node_id)
+print(step_run)
+
 print("Downloading evaluation results...")
 # access the evaluate_output
-data = pipeline_run.find_step_run('evaluate')[0].get_output_data('evaluate_output')
+#data = pipeline_run.find_step_run('evaluate')[0].get_output_data('evaluate_output')
+data = step_run.get_output_data('evaluate_output')
 # download the predictions to local path
 data.download('.', show_progress=True)
 
