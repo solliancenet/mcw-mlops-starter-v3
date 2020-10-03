@@ -102,7 +102,7 @@ with open(aci_webservice_filepath, "w") as f:
 print("Done saving aci_test_webservice.json!")
 
 # Single test data
-test_data =[['manufactured in 2016 made of plastic in good condition']]
+test_data = ['manufactured in 2016 made of plastic in good condition']
 
 # Call the webservice to make predictions on the test data
 prediction = service.run(json.dumps(test_data))
