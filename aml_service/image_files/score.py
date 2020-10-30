@@ -16,7 +16,7 @@ def init():
     global tokenizer, max_len, max_words
     
     try:
-        model_name = 'MODEL-NAME' # Placeholder model name
+        model_name = 'compliance-classifier'
         print('Looking for model path for model: ', model_name)
         model_path = Model.get_model_path(model_name = model_name)
         print('Loading model from: ', model_path)
@@ -27,7 +27,11 @@ def init():
         inputs_dc = ModelDataCollector("model_telemetry", designation="inputs")
         prediction_dc = ModelDataCollector("model_telemetry", designation="predictions", feature_names=["prediction"])
 
-        car_components_descriptions = pd.read_csv('./image_files/training_data.csv')['text'].tolist()
+        cardata_url = ('https://quickstartsws9073123377.blob.core.windows.net/'
+                        'azureml-blobstore-0d1c4218-a5f9-418b-bf55-902b65277b85/'
+                        'quickstarts/connected-car-data/connected-car_components.csv')
+
+        car_components_descriptions = pd.read_csv(cardata_url)['text'].tolist()
         print('Training dataset loaded...')
 
         max_len = 100

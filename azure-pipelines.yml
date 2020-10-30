@@ -5,11 +5,13 @@ pool:
   vmImage: 'Ubuntu-18.04'
 
 variables:
-  resourcegroup: 'MCW-MLOps-XXXXX'
-  workspace: 'quick-starts-ws-XXXXX'
+  resourcegroup: 'mcw-mlops'
+  workspace: 'quick-starts-ws'
   experiment: 'quick-starts-mlops'
   aml_compute_target: 'amlcluster'
   model_name: 'compliance-classifier'
+  aks_name: 'aks-cluster01'
+  aks_region: 'eastus'
 
 steps:
 
@@ -55,7 +57,8 @@ steps:
     scriptLocation: inlineScript
     inlineScript: 'az ml run submit-script -d ./environment_setup/dependencies.yml 
     ./aml_service/pipelines_master.py --aml_compute_target $(aml_compute_target) 
-    --model_name $(model_name) --build_number $(Build.BuildNumber) --path $(Build.SourcesDirectory)'
+    --model_name $(model_name) --aks_name $(aks_name) --aks_region $(aks_region) 
+    --build_number $(Build.BuildNumber) --path $(Build.SourcesDirectory)'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'

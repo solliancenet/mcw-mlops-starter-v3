@@ -1,0 +1,7 @@
+computeType: AKS
+authEnabled: True
+appInsightsEnabled: False
+scoringTimeoutMs: 1000
+maxConcurrentRequestsPerContainer: 2
+maxQueueWaitMs: 1000
+sslEnabled: False

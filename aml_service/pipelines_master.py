@@ -10,6 +10,7 @@ from azureml.core.runconfig import DEFAULT_CPU_IMAGE
 from azureml.data.data_reference import DataReference
 from azureml.pipeline.core import Pipeline, PipelineData, PipelineRun, StepRun
 from azureml.pipeline.steps import PythonScriptStep
+from azureml.core.compute import AksCompute, ComputeTarget
 from azureml.core.authentication import AzureCliAuthentication
 
 print("In piplines_master.py")
@@ -20,14 +21,18 @@ print("Azure ML SDK version:", azureml.core.VERSION)
 parser = argparse.ArgumentParser("pipelines_master")
 parser.add_argument("--aml_compute_target", type=str, help="compute target name", dest="aml_compute_target", required=True)
 parser.add_argument("--model_name", type=str, help="model name", dest="model_name", required=True)
+parser.add_argument("--aks_name", type=str, help="aks name", dest="aks_name", required=True)
+parser.add_argument("--aks_region", type=str, help="aks region", dest="aks_region", required=True)
 parser.add_argument("--build_number", type=str, help="build number", dest="build_number", required=True)
 parser.add_argument("--path", type=str, help="path", dest="path", required=True)
 args = parser.parse_args()
 
 print("Argument 1: %s" % args.aml_compute_target)
 print("Argument 2: %s" % args.model_name)
-print("Argument 3: %s" % args.build_number)
-print("Argument 4: %s" % args.path)
+print("Argument 3: %s" % args.aks_name)
+print("Argument 4: %s" % args.aks_region)
+print("Argument 5: %s" % args.build_number)
+print("Argument 6: %s" % args.path)
 
 print('creating AzureCliAuthentication...')
 cli_auth = AzureCliAuthentication()
@@ -146,6 +151,25 @@ with open(os.path.join('./', data.path_on_datastore, 'eval_info.json')) as f:
     eval_info = json.load(f)
 print("Printing evaluation results...")
 print(eval_info)
+
+deploy_model = eval_info["deploy_model"]
+aks_name = args.aks_name
+aks_region = args.aks_region
+
+compute_list = ws.compute_targets
+aks_target = None
+if aks_name in compute_list:
+    aks_target = compute_list[aks_name]
+
+if deploy_model and (aks_target == None):
+    print("Model passed the evaluation criteria")
+    print("No AKS found. Creating new Aks: {} for production deployment.".format(aks_name))
+    prov_config = AksCompute.provisioning_configuration(location=aks_region)
+    # Create the cluster
+    aks_target = ComputeTarget.create(workspace=ws, name=aks_name, provisioning_configuration=prov_config)
+    aks_target.wait_for_completion(show_output=True)
+    print(aks_target.provisioning_state)
+    print(aks_target.provisioning_errors)
 
 print("Saving evaluation results for release pipeline...")
 output_dir = os.path.join(args.path, 'outputs')
