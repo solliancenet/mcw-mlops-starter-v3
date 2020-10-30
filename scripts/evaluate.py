@@ -56,7 +56,8 @@ if(len(ws_list) > 0):
         if ws_list[i].compute_type != 'ACI':
             webservice = ws_list[i]
     if webservice != None:
-        current_model_run_id = webservice.tags.get("run_id")
+        #current_model_run_id = webservice.tags.get("run_id")
+        current_model_run_id = webservice.models[0].tags['run_id']
         print('Found current deployed model run id:', current_model_run_id)
     else:
         deploy_model = True
