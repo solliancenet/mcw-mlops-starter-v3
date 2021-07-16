@@ -1,8 +1,7 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'Ubuntu-18.04'
+pool: 'MCW Agent Pool'
 
 variables:
   resourcegroup: 'mcw-mlops'
@@ -14,11 +13,6 @@ variables:
   aks_region: 'eastus'
 
 steps:
-
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.6'
-    architecture: 'x64'   
 
 - task: Bash@3
   displayName: 'Install Requirements'
