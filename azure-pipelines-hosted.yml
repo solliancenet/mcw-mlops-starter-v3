@@ -32,7 +32,7 @@ steps:
   inputs:
     azureSubscription: 'quick-starts-sc'
     scriptLocation: inlineScript
-    inlineScript: 'az extension add -n azure-cli-ml'
+    inlineScript: 'az extension add -n ml'
 
 - task: AzureCLI@1
   displayName: 'Attach folder to workspace'
