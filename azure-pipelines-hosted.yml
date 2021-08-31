@@ -5,13 +5,13 @@ pool:
   vmImage: 'Ubuntu-18.04'
 
 variables:
-  resourcegroup: 'mcw-mlops'
-  workspace: 'quick-starts-ws'
+  resourcegroup: 'mcw-mlops-rg'
+  workspace: 'mcw-mlops-ws'
   experiment: 'quick-starts-mlops'
   aml_compute_target: 'amlcluster'
   model_name: 'compliance-classifier'
   aks_name: 'aks-cluster01'
-  aks_region: 'eastus'
+  working-dir: './aml_service'
 
 steps:
 
@@ -27,38 +27,41 @@ steps:
     filePath: 'environment_setup/install_requirements.sh'
     workingDirectory: 'environment_setup'
 
-- task: AzureCLI@1
-  displayName: 'Install the CLI'
+- task: AzureCLI@2
+  displayName: 'Install the Azure CLI ML extension'
   inputs:
     azureSubscription: 'quick-starts-sc'
     scriptLocation: inlineScript
-    inlineScript: 'az extension add -n ml'
+    scriptType: 'bash'
+    inlineScript: 'az extension add -n azure-cli-ml'
 
-- task: AzureCLI@1
+- task: AzureCLI@2
   displayName: 'Attach folder to workspace'
   inputs:
     azureSubscription: 'quick-starts-sc'
     scriptLocation: inlineScript
+    scriptType: 'bash'
     inlineScript: 'az ml folder attach -e $(experiment) -w $(workspace) -g $(resourcegroup) --path $(Build.SourcesDirectory)'
 
-- task: AzureCLI@1
+- task: AzureCLI@2
   displayName: 'Get or create AML Compute Target'
   inputs:
     azureSubscription: 'quick-starts-sc'
     scriptLocation: inlineScript
-    inlineScript: 'az ml run submit-script -d ./environment_setup/dependencies.yml 
-    ./aml_service/create_aml_cluster.py --aml_compute_target $(aml_compute_target) 
-    --path $(Build.SourcesDirectory)'
+    scriptType: 'bash'
+    inlineScript: 'az ml computetarget create amlcompute -n $(aml_compute_target) 
+    --vm-size Standard_DS3_v2 --max-nodes 2 --min-nodes 2'
 
-- task: AzureCLI@1
-  displayName: 'Master Pipeline'
+- task: AzureCLI@2
+  displayName: 'Run training pipeline'
   inputs:
     azureSubscription: 'quick-starts-sc'
     scriptLocation: inlineScript
-    inlineScript: 'az ml run submit-script -d ./environment_setup/dependencies.yml 
-    ./aml_service/pipelines_master.py --aml_compute_target $(aml_compute_target) 
-    --model_name $(model_name) --aks_name $(aks_name) --aks_region $(aks_region) 
-    --build_number $(Build.BuildNumber) --path $(Build.SourcesDirectory)'
+    scriptType: 'bash'
+    workingDirectory: $(working-dir)
+    inlineScript: 'az ml run submit-script -c config/pipelines_master --ct $(aml_compute_target) -e $(experiment) 
+    pipelines_master.py --aml_compute_target $(aml_compute_target) --model_name $(model_name) 
+    --aks_name $(aks_name) --build_number $(Build.BuildNumber)'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'

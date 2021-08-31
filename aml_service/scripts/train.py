@@ -6,14 +6,15 @@ import os
 import numpy as np
 import pandas as pd
 
-import keras
-from keras import models 
-from keras import layers
-from keras import optimizers
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.models import Sequential
-from keras.layers import Embedding, Flatten, Dense
+import tensorflow
+from tensorflow import keras
+from tensorflow.keras import models 
+from tensorflow.keras import layers
+from tensorflow.keras import optimizers
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, Flatten, Dense
 
 import azureml.core
 from azureml.core import Run
@@ -265,6 +266,8 @@ run.log(model.metrics_names[1], evaluation_metrics[1], 'Model test data accuracy
 
 train_info = {}
 train_info['train_run_id'] = run.id
+train_info['loss'] = evaluation_metrics[0]
+train_info['acc'] = evaluation_metrics[1]
 train_filepath = os.path.join(args.output, 'train_info.json')
 with open(train_filepath, "w") as f:
     json.dump(train_info, f)

@@ -35,12 +35,15 @@ train_filepath = os.path.join(args.input, 'train_info.json')
 with open(train_filepath) as f:
     train_info = json.load(f)
 
+print("train_info.json")
+print(train_info)
 #pipeline_run = PipelineRun(run.experiment, run_id = run.properties['azureml.pipelinerunid'])
 #latest_model_run = Run(run.experiment, run_id = pipeline_run.find_step_run('train')[0].id)
 latest_model_run_id = train_info['train_run_id']
-latest_model_run = Run(run.experiment, run_id=latest_model_run_id)
-print('Latest model run id: ', latest_model_run.id)
-latest_model_accuracy = latest_model_run.get_metrics().get("acc")
+#latest_model_run = Run(run.experiment, run_id=latest_model_run_id)
+print('Latest model run id: ', latest_model_run_id)
+#latest_model_accuracy = latest_model_run.get_metrics().get("acc")
+latest_model_accuracy = float(train_info['acc'])
 print('Latest model accuracy: ', latest_model_accuracy)
 
 ws_list = Webservice.list(ws, model_name = args.model_name)
@@ -49,6 +52,7 @@ print(ws_list)
 
 deploy_model = False
 current_model_run_id = None
+current_model_accuracy = -1 # undefined
 
 if(len(ws_list) > 0):
     webservice = None
@@ -59,6 +63,8 @@ if(len(ws_list) > 0):
         #current_model_run_id = webservice.tags.get("run_id")
         current_model_run_id = webservice.models[0].tags['run_id']
         print('Found current deployed model run id:', current_model_run_id)
+        current_model_accuracy = float(webservice.models[0].tags['acc'])
+        print('Found current deployed model accuracy:', current_model_accuracy)
     else:
         deploy_model = True
         print('No deployed production webservice for model: ', args.model_name)
@@ -66,10 +72,9 @@ else:
     deploy_model = True
     print('No deployed webservice for model: ', args.model_name)
 
-current_model_accuracy = -1 # undefined
 if current_model_run_id != None:
-    current_model_run = Run(run.experiment, run_id = current_model_run_id)
-    current_model_accuracy = current_model_run.get_metrics().get("acc")
+    #current_model_run = Run(run.experiment, run_id = current_model_run_id)
+    #current_model_accuracy = current_model_run.get_metrics().get("acc")
     print('accuracies')
     print(latest_model_accuracy, current_model_accuracy)
     if latest_model_accuracy > current_model_accuracy:
@@ -108,6 +113,7 @@ if deploy_model:
     model_tags['type'] = 'Classification'
     model_tags['build_number'] = args.build_number
     model_tags['run_id'] = latest_model_run_id
+    model_tags['acc'] = latest_model_accuracy
     model_tags['help'] = 'MCW MLOps'
     model_tags['help_url'] = 'https://github.com/microsoft/MCW-ML-Ops'
     model_tags['usecase_primary'] = 'Car component classification as compliant or not compliant.'

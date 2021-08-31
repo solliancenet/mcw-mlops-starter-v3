@@ -5,13 +5,17 @@ dependencies:
 - python=3.6.2
 
 - pip:
-  - tensorflow==2.0.0
-  - keras==2.3.1
   - azureml-defaults
   - azureml-sdk
   - azureml-monitoring
-  - onnxruntime==1.2.0
-  - numpy>=1.16.0,<1.17.0
+  - numpy==1.18.5
+  - pandas==1.0.4
+  - scikit-learn==0.23.1
+  - tensorflow==2.2.0
+  - onnxmltools==1.7.0
+  - keras2onnx==1.7.0
+  - onnxruntime==1.4.0
+  - tf2onnx==1.6.3
 channels:
 - anaconda
 - conda-forge

@@ -3,8 +3,10 @@ import json
 import numpy as np
 import pandas as pd
 
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
+import tensorflow
+from tensorflow import keras
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from azureml.core.model import Model
 from azureml.monitoring import ModelDataCollector

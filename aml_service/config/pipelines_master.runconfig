@@ -1,0 +1,10 @@
+script: pipelines_master_test.py
+framework: Python
+environment:
+  python:
+    userManagedDependencies: false
+    interpreterPath: python
+    condaDependenciesFile: config/dependencies.yml
+  docker:
+    enabled: true
+    baseImage: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:20210806.v1

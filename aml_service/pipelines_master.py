@@ -22,58 +22,35 @@ parser = argparse.ArgumentParser("pipelines_master")
 parser.add_argument("--aml_compute_target", type=str, help="compute target name", dest="aml_compute_target", required=True)
 parser.add_argument("--model_name", type=str, help="model name", dest="model_name", required=True)
 parser.add_argument("--aks_name", type=str, help="aks name", dest="aks_name", required=True)
-parser.add_argument("--aks_region", type=str, help="aks region", dest="aks_region", required=True)
 parser.add_argument("--build_number", type=str, help="build number", dest="build_number", required=True)
-parser.add_argument("--path", type=str, help="path", dest="path", required=True)
 args = parser.parse_args()
 
 print("Argument 1: %s" % args.aml_compute_target)
 print("Argument 2: %s" % args.model_name)
 print("Argument 3: %s" % args.aks_name)
-print("Argument 4: %s" % args.aks_region)
-print("Argument 5: %s" % args.build_number)
-print("Argument 6: %s" % args.path)
-
-print('creating AzureCliAuthentication...')
-cli_auth = AzureCliAuthentication()
-print('done creating AzureCliAuthentication!')
+print("Argument 4: %s" % args.build_number)
 
 print('get workspace...')
-ws = Workspace.from_config(path=args.path, auth=cli_auth)
+run = Run.get_context()
+ws = run.experiment.workspace
+print(ws)
 print('done getting workspace!')
 
 print("looking for existing compute target.")
 aml_compute = AmlCompute(ws, args.aml_compute_target)
+print(aml_compute)
 print("found existing compute target.")
 
 # Create a new runconfig object
 run_amlcompute = RunConfiguration()
-
-# Use the cpu_cluster you created above. 
-run_amlcompute.target = args.aml_compute_target
-
 # Enable Docker
 run_amlcompute.environment.docker.enabled = True
-
 # Set Docker base image to the default CPU-based image
-run_amlcompute.environment.docker.base_image = DEFAULT_CPU_IMAGE
-
+run_amlcompute.environment.docker.base_image = "mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:20210806.v1"
 # Use conda_dependencies.yml to create a conda environment in the Docker image for execution
+conda_dep = CondaDependencies(conda_dependencies_file_path="config/dependencies.yml")
 run_amlcompute.environment.python.user_managed_dependencies = False
-
-# Specify CondaDependencies obj, add necessary packages
-run_amlcompute.environment.python.conda_dependencies = CondaDependencies.create(pip_packages=[
-    'numpy',
-    'pandas',
-    'tensorflow==2.0.0',
-    'keras==2.3.1',
-    'azureml-sdk',
-    'azureml-dataprep[pandas]',
-    'onnxmltools==1.6.1',
-    'keras2onnx==1.6.1',
-    'onnxruntime==1.3.0', 
-    'tf2onnx==1.6.3'
-])
+run_amlcompute.environment.python.conda_dependencies = conda_dep
 
 scripts_folder = 'scripts'
 def_blob_store = ws.get_default_datastore()
@@ -152,30 +129,33 @@ with open(os.path.join('./', data.path_on_datastore, 'eval_info.json')) as f:
 print("Printing evaluation results...")
 print(eval_info)
 
+print("Saving evaluation results for release pipeline...")
+os.makedirs('./outputs', exist_ok=True)
+filepath = os.path.join('./outputs', 'eval_info.json')
+
+with open(filepath, "w") as f:
+    json.dump(eval_info, f)
+    print('eval_info.json saved!')
+
 deploy_model = eval_info["deploy_model"]
 aks_name = args.aks_name
-aks_region = args.aks_region
+
+if not deploy_model:
+    print("Model failed the evaluation criteria")
 
 compute_list = ws.compute_targets
 aks_target = None
 if aks_name in compute_list:
     aks_target = compute_list[aks_name]
+    if deploy_model:
+        print("Model passed the evaluation criteria")
+        print("AKS target found: {}".format(aks_name))
+        print(aks_target.provisioning_state)
+        print(aks_target.provisioning_errors)
 
 if deploy_model and (aks_target == None):
     print("Model passed the evaluation criteria")
-    print("No AKS found. Creating new Aks: {} for production deployment.".format(aks_name))
-    prov_config = AksCompute.provisioning_configuration(location=aks_region)
-    # Create the cluster
-    aks_target = ComputeTarget.create(workspace=ws, name=aks_name, provisioning_configuration=prov_config)
-    aks_target.wait_for_completion(show_output=True)
-    print(aks_target.provisioning_state)
-    print(aks_target.provisioning_errors)
+    print("AKS target not found: {}".format(aks_name))
+    print("Please create an AKS target named: {} as per instructions in \"Before the HOL – MLOps\"".format(aks_name))
 
-print("Saving evaluation results for release pipeline...")
-output_dir = os.path.join(args.path, 'outputs')
-os.makedirs(output_dir, exist_ok=True)
-filepath = os.path.join(output_dir, 'eval_info.json')
-
-with open(filepath, "w") as f:
-    json.dump(eval_info, f)
-    print('eval_info.json saved!')
+print("pipelines_master successfully completed!")
