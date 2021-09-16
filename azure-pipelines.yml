@@ -4,8 +4,8 @@ trigger:
 pool: 'MCW Agent Pool'
 
 variables:
-  resourcegroup: 'mcw-mlops-rg'
-  workspace: 'mcw-mlops-ws'
+  resourcegroup: 'MCW-MLOps'
+  workspace: 'quick-start-ws'
   experiment: 'quick-starts-mlops'
   aml_compute_target: 'amlcluster'
   model_name: 'compliance-classifier'
