@@ -12,6 +12,7 @@ from azureml.pipeline.core import Pipeline, PipelineData, PipelineRun, StepRun
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.core.compute import AksCompute, ComputeTarget
 from azureml.core.authentication import AzureCliAuthentication
+import os
 
 print("In piplines_master.py")
 print("Pipeline SDK-specific imports completed")
